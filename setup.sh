@@ -50,9 +50,12 @@ echo "サーバーを更新します"
 
 sudo apt-get update -y > /dev/null
 sudo apt-get install -y curl > /dev/null
+sudo apt-get install -y iptables-persistent > /dev/null
 curl -fsSL https://get.docker.com | sh > /dev/null
+sudo apt-get install -y docker-compose-plugin > /dev/null
 
 echo "パスワードの暗号化をします"
+sudo docker pull ghcr.io/wg-easy/wg-easy > /dev/null
 RAW_HASH=$(sudo docker run --rm ghcr.io/wg-easy/wg-easy wgeasy password "$RAW_PASSWORD" | grep "PASSWORD_HASH=" | cut -d'=' -f2-)
 
 ESCAPED_HASH=$(echo "$RAW_HASH" | sed 's/\$/$$/g')
@@ -61,13 +64,13 @@ mkdir -p ~/wg-easy && cd ~/wg-easy
 
 echo "VPNの設定をします"
 
-cat << EOF > docker-compose.yml
+cat << \EOF > docker-compose.yml
 services:
   wg-easy:
     environment:
       - LANG=ja
-      - WG_HOST=${SERVER_IP}
-      - PASSWORD_HASH=${ESCAPED_HASH}
+      - WG_HOST=__SERVER_IP__
+      - PASSWORD_HASH=__ESCAPED_HASH__
       - PORT=51821
       - WG_PORT=51820
     image: ghcr.io/wg-easy/wg-easy
@@ -85,6 +88,9 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv4.ip_forward=1
 EOF
+
+sed -i "s|__SERVER_IP__|${SERVER_IP}|g" docker-compose.yml
+sed -i "s|__ESCAPED_HASH__|${ESCAPED_HASH}|g" docker-compose.yml
 
 echo "ネットにアクセスできるようにします"
 
