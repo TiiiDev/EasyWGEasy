@@ -8,17 +8,22 @@ echo "=================================================="
 echo "これからいくつか質問をします。画面の指示に従って入力してください。"
 echo ""
 
-while [ -z "$SERVER_IP" ]; do
-    read -p "「IPアドレス」を入力してエンターを押してください: " SERVER_IP
-    if [ -z "$SERVER_IP" ]; then
-        echo "間違っているようです...ヒント:数字とピリオドの塊です！"
-    fi
-done
+SERVER_IP=$(curl -s inet-ip.info || curl -s ifconfig.me)
 
-while [ -z "$VPN_PASSWORD" ]; do
+if [ -z "$SERVER_IP" ]; then
+    # 万が一外部サービスが落ちていた時だけ手動入力させる
+    while [ -z "$SERVER_IP" ]; do
+        read -p "「数字の塊」が見つかりませんでした。もう一度入力してください: " SERVER_IP
+    done
+else
+    echo "「数字の塊」を自動で見つけました: $SERVER_IP"
+fi
+
+
+while [ -z "$RAW_PASSWORD" ]; do
     read -s -p "好きなパスワードを決めてください" VPN_PASSWORD
     echo "" # 改行用
-    if [ -z "$VPN_PASSWORD" ]; then
+    if [ -z "$RAW_PASSWORD" ]; then
         echo "なにも入力されてないようです...何か決めてください！"
     fi
 done
@@ -49,6 +54,11 @@ sudo apt-get update -y > /dev/null
 sudo apt-get install -y curl > /dev/null
 curl -fsSL https://get.docker.com | sh > /dev/null
 
+echo "パスワードの暗号化をします"
+RAW_HASH=$(sudo docker run --rm ghcr.io/wg-easy/wg-easy wgeasy password "$RAW_PASSWORD" | grep "PASSWORD_HASH=" | cut -d'=' -f2-)
+
+ESCAPED_HASH=$(echo "$RAW_HASH" | sed 's/\$/$$/g')
+
 mkdir -p ~/wg-easy && cd ~/wg-easy
 
 echo "VPNの設定をします"
@@ -59,7 +69,7 @@ services:
     environment:
       - LANG=ja
       - WG_HOST=${SERVER_IP}
-      - PASSWORD=${VPN_PASSWORD}
+      - PASSWORD_HASH=${ESCAPED_HASH}
       - PORT=51821
       - WG_PORT=51820
     image: ghcr.io/wg-easy/wg-easy
