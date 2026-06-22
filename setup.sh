@@ -74,8 +74,8 @@ while true; do
         break
     fi
 
-    echo "Dockerの準備が整うのを待っています...（3秒後に再試行）"
-    sleep 3
+    echo "まだ準備ができてないみたいです...(30秒後に再試行)"
+    sleep 30
 done
 mkdir -p ~/wg-easy && cd ~/wg-easy
 
