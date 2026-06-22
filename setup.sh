@@ -64,10 +64,10 @@ sudo docker pull ghcr.io/wg-easy/wg-easy > /dev/null
 # 成功するまでループ
 while true; do
     
-    RAW_OUTPUT=$(sudo docker run --rm ghcr.io/wg-easy/wg-easy password "$RAW_PASSWORD" || true)
+    RAW_OUTPUT=$(sudo docker run --rm ghcr.io/wg-easy/wg-easy wgpw "$RAW_PASSWORD" || true)
     
     # 出力からハッシュを抽出
-    RAW_HASH=$(echo "$RAW_OUTPUT" | grep "PASSWORD_HASH=" | cut -d'=' -f2-)
+    RAW_HASH=$(echo "$RAW_OUTPUT" | grep "PASSWORD_HASH=" | cut -d'=' -f2- | tr -d "'")
     
     # $ を $$ にエスケープ
     ESCAPED_HASH=$(echo "$RAW_HASH" | sed 's/\$/$$/g')
@@ -77,7 +77,7 @@ while true; do
         break
     fi
 
-    # 失敗した場合はエラーログが上に表示された状態で、3秒待って再実行
+    # 失敗した場合はエラーログが上に表示された状態で、30秒待って再実行
     echo "まだ準備ができてないみたいです。30秒後に再試行します..."
     sleep 30
 done
