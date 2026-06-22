@@ -13,15 +13,14 @@ SERVER_IP=$(curl -s inet-ip.info || curl -s ifconfig.me)
 if [ -z "$SERVER_IP" ]; then
     # 万が一外部サービスが落ちていた時だけ手動入力させる
     while [ -z "$SERVER_IP" ]; do
-        read -p "「数字の塊」が見つかりませんでした。もう一度入力してください: " SERVER_IP
+        read -p "「数字の塊」が見つかりませんでした。もう一度入力してください: " SERVER_IP < /dev/tty
     done
 else
     echo "「数字の塊」を自動で見つけました: $SERVER_IP"
 fi
 
 while [ -z "$RAW_PASSWORD" ]; do
-    read -p "好きなパスワードを決めてください: " RAW_PASSWORD
-    echo "" # 改行用
+    read -p "好きなパスワードを決めてください: " RAW_PASSWORD　< /dev/tty
     if [ -z "$RAW_PASSWORD" ]; then
         echo "なにも入力されてないようです...何か決めてください！"
     fi
