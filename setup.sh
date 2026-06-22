@@ -61,20 +61,24 @@ sudo apt-get install -y docker-compose-plugin > /dev/null
 echo "パスワードの暗号化をします"
 sudo docker pull ghcr.io/wg-easy/wg-easy > /dev/null
 
-# 成功するまで無限ループ
+# 成功するまでループ
 while true; do
-    # ハッシュの生成を試みる
-    RAW_HASH=$(sudo docker run --rm ghcr.io/wg-easy/wg-easy password "$RAW_PASSWORD" 2>/dev/null | grep "PASSWORD_HASH=" | cut -d'=' -f2-)
+    
+    RAW_OUTPUT=$(sudo docker run --rm ghcr.io/wg-easy/wg-easy password "$RAW_PASSWORD" || true)
+    
+    # 出力からハッシュを抽出
+    RAW_HASH=$(echo "$RAW_OUTPUT" | grep "PASSWORD_HASH=" | cut -d'=' -f2-)
     
     # $ を $$ にエスケープ
     ESCAPED_HASH=$(echo "$RAW_HASH" | sed 's/\$/$$/g')
 
-    # エスケープ後のハッシュが空でなければ、ループを抜ける
+    # ハッシュが空でなければ（＝docker runが成功して値が取れたら）ループを抜ける
     if [ -n "$ESCAPED_HASH" ]; then
         break
     fi
 
-    echo "まだ準備ができてないみたいです...(30秒後に再試行)"
+    # 失敗した場合はエラーログが上に表示された状態で、3秒待って再実行
+    echo "まだ準備ができてないみたいです。30秒後に再試行します..."
     sleep 30
 done
 mkdir -p ~/wg-easy && cd ~/wg-easy
