@@ -61,12 +61,22 @@ sudo apt-get install -y docker-compose-plugin > /dev/null
 echo "パスワードの暗号化をします"
 sudo docker pull ghcr.io/wg-easy/wg-easy > /dev/null
 
-# 【修正】wgeasy プレフィックスを削除して password コマンドを直接実行
-RAW_HASH=$(sudo docker run --rm ghcr.io/wg-easy/wg-easy password "$RAW_PASSWORD" | grep "PASSWORD_HASH=" | cut -d'=' -f2-)
+# 成功するまで無限ループ
+while true; do
+    # ハッシュの生成を試みる
+    RAW_HASH=$(sudo docker run --rm ghcr.io/wg-easy/wg-easy password "$RAW_PASSWORD" 2>/dev/null | grep "PASSWORD_HASH=" | cut -d'=' -f2-)
+    
+    # $ を $$ にエスケープ
+    ESCAPED_HASH=$(echo "$RAW_HASH" | sed 's/\$/$$/g')
 
-# $ を $$ にエスケープ
-ESCAPED_HASH=$(echo "$RAW_HASH" | sed 's/\$/$$/g')
+    # エスケープ後のハッシュが空でなければ、ループを抜ける
+    if [ -n "$ESCAPED_HASH" ]; then
+        break
+    fi
 
+    echo "Dockerの準備が整うのを待っています...（3秒後に再試行）"
+    sleep 3
+done
 mkdir -p ~/wg-easy && cd ~/wg-easy
 
 echo "VPNの設定をします"
