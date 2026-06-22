@@ -20,7 +20,7 @@ else
 fi
 
 while [ -z "$RAW_PASSWORD" ]; do
-    read -p "好きなパスワードを決めてください: " RAW_PASSWORD　< /dev/tty
+    read -p "好きなパスワードを決めてください: " RAW_PASSWORD < /dev/tty
     if [ -z "$RAW_PASSWORD" ]; then
         echo "なにも入力されてないようです...何か決めてください！"
     fi
