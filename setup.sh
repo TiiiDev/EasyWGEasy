@@ -19,9 +19,8 @@ else
     echo "「数字の塊」を自動で見つけました: $SERVER_IP"
 fi
 
-
 while [ -z "$RAW_PASSWORD" ]; do
-    read -s -p "好きなパスワードを決めてください" VPN_PASSWORD
+    read -p "好きなパスワードを決めてください: " RAW_PASSWORD
     echo "" # 改行用
     if [ -z "$RAW_PASSWORD" ]; then
         echo "なにも入力されてないようです...何か決めてください！"
